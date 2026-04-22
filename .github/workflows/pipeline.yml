@@ -30,7 +30,7 @@ jobs:
         run: |
           ./tmas scan docker-archive:demo-app.tar -VMS \
             --region ap-south-1 \
-            --output result.json
+            --output json=result.json
 
       - name: Enforce Security
         run: |
