@@ -26,10 +26,9 @@ jobs:
 
     - name: Scan with TMAS
       run: |
-        ./tmas scan image \
-          --file demo-app.tar \
+        ./tmas scan docker-archive:demo-app.tar -VMS \
           --token ${{ secrets.TMAS_API_TOKEN }}
 
     - name: Enforce Security
       run: |
-        echo "Enforcement step (will improve later)"
+        echo "Enforcement not implemented yet" 
