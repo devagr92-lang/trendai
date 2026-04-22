@@ -36,4 +36,4 @@ jobs:
         if grep -E "CRITICAL|HIGH" result.json; then
           echo "Blocking deployment due to vulnerabilities"
           exit 1
-        fi
+        fil
