@@ -20,7 +20,8 @@ jobs:
 
     - name: Install TMAS
       run: |
-        curl -L -o tmas https://ast-cli.xdr.trendmicro.com/tmas-cli/latest/tmas-cli_Linux_x86_64.tar.gz
+        curl -L -o tmas.tar.gz https://ast-cli.xdr.trendmicro.com/tmas-cli/latest/tmas-cli_Linux_x86_64.tar.gz
+        tar -xzf tmas.tar.gz
         chmod +x tmas
 
     - name: Scan with TMAS
