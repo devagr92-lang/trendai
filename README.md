@@ -1,0 +1,2 @@
+# trendai
+TrendAI Journey
