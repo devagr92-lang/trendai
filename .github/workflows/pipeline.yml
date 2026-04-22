@@ -1,47 +1,44 @@
 name: CI-CD with TMAS
+                                                                                                                                                                                                          
+  on:                                                                                                                                                                                                     
+    push:                                                                                                                                                                                                 
+      branches: [ "main" ]
+                                                                                                                                                                                                          
+  jobs:
+    build-scan:                                                                                                                                                                                           
+      runs-on: ubuntu-latest
 
-on:
-  push:
-    branches: [ "main" ]
+      steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3                                                                                                                                                                         
+  
+      - name: Build Docker Image                                                                                                                                                                          
+        run: docker build -t demo-app .
 
-jobs:
-  build-scan:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Build Docker Image
-      run: docker build -t demo-app .
-
-    - name: Save Docker Image
-      run: docker save demo-app -o demo-app.tar
-
-    - name: Install TMAS
-      run: |
-        curl -L -o tmas.tar.gz https://ast-cli.xdr.trendmicro.com/tmas-cli/latest/tmas-cli_Linux_x86_64.tar.gz
-        tar -xzf tmas.tar.gz
-        chmod +x tmas
-
-    - name: Install jq
-      run: sudo apt-get update && sudo apt-get install -y jq
-
-    - name: Scan with TMAS
-      run: |
-        ./tmas scan docker-archive:demo-app.tar -VMS \
-          --token ${{ secrets.TMAS_API_TOKEN }} \
-          --region ap-south-1 \
-          --output result.json
-
-    - name: Enforce Security
-      run: |
-        CRIT=$(jq '.vulnerability.totalVulnCount.critical // 0' result.json)
-        HIGH=$(jq '.vulnerability.totalVulnCount.high // 0' result.json)
-
-        if [ "$CRIT" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-          echo "Blocking: CRITICAL=$CRIT HIGH=$HIGH"
-          exit 1
-        else
-          echo "No blocking vulnerabilities"
-        fi
+      - name: Save Docker Image
+        run: docker save demo-app -o demo-app.tar
+                                                                                                                                                                                                          
+      - name: Install TMAS
+        run: |                                                                                                                                                                                            
+          curl -L -o tmas.tar.gz https://ast-cli.xdr.trendmicro.com/tmas-cli/latest/tmas-cli_Linux_x86_64.tar.gz
+          tar -xzf tmas.tar.gz                                                                                                                                                                            
+          chmod +x tmas
+                                                                                                                                                                                                          
+      - name: Scan with TMAS
+        env:                                                                                                                                                                                              
+          TMAS_API_KEY: ${{ secrets.TMAS_API_TOKEN }}
+        run: |                                                                                                                                                                                            
+          ./tmas scan docker-archive:demo-app.tar -VMS \
+            --region ap-south-1 \
+            --output result.json                                                                                                                                                                          
+  
+      - name: Enforce Security                                                                                                                                                                            
+        run: |    
+          CRIT=$(jq '.vulnerability.totalVulnCount.critical // 0' result.json)
+          HIGH=$(jq '.vulnerability.totalVulnCount.high // 0' result.json)                                                                                                                                
+          if [ "$CRIT" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "Blocking: CRITICAL=$CRIT HIGH=$HIGH"                                                                                                                                                    
+            exit 1                                                                                                                                                                                        
+          else                                                                                                                                                                                            
+            echo "No blocking vulnerabilities"                                                                                                                                                            
+          fi
