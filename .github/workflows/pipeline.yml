@@ -1,11 +1,11 @@
-name: CI Pipeline
+name: CI-CD with TMAS
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-scan:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,3 +17,22 @@ jobs:
 
     - name: Save Docker Image
       run: docker save demo-app > demo-app.tar
+
+    - name: Install TMAS
+      run: |
+        curl -L -o tmas https://ast-cli.xdr.trendmicro.com/tmas-cli/latest/tmas-cli_Linux_x86_64.tar.gz
+        chmod +x tmas
+
+    - name: Scan with TMAS
+      run: |
+        ./tmas scan \
+          --input demo-app.tar \
+          --output result.json \
+          --token ${{ secrets.TMAS_API_TOKEN }}
+
+    - name: Enforce Security
+      run: |
+        if grep -E "CRITICAL|HIGH" result.json; then
+          echo "Blocking deployment due to vulnerabilities"
+          exit 1
+        fi
