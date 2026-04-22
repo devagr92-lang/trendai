@@ -29,7 +29,6 @@ jobs:
           TMAS_API_KEY: ${{ secrets.TMAS_API_TOKEN }}
         run: |
           ./tmas scan docker-archive:demo-app.tar -VMS \
-            --region ap-south-1 \
             --output json=result.json
 
       - name: Enforce Security
