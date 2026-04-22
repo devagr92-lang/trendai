@@ -16,7 +16,7 @@ jobs:
       run: docker build -t demo-app .
 
     - name: Save Docker Image
-      run: docker save demo-app > demo-app.tar
+      run: docker save demo-app -o demo-app.tar
 
     - name: Install TMAS
       run: |
@@ -24,11 +24,24 @@ jobs:
         tar -xzf tmas.tar.gz
         chmod +x tmas
 
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
     - name: Scan with TMAS
       run: |
         ./tmas scan docker-archive:demo-app.tar -VMS \
-          --token ${{ secrets.TMAS_API_TOKEN }}
+          --token ${{ secrets.TMAS_API_TOKEN }} \
+          --region ap-south-1 \
+          --output result.json
 
     - name: Enforce Security
       run: |
-        echo "Enforcement not implemented yet" 
+        CRIT=$(jq '.vulnerability.totalVulnCount.critical // 0' result.json)
+        HIGH=$(jq '.vulnerability.totalVulnCount.high // 0' result.json)
+
+        if [ "$CRIT" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+          echo "Blocking: CRITICAL=$CRIT HIGH=$HIGH"
+          exit 1
+        else
+          echo "No blocking vulnerabilities"
+        fi
